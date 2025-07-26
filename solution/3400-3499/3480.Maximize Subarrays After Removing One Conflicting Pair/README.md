@@ -96,7 +96,62 @@ tags:
 
 ```java
 
-```
+import java.util.*;
+
+class Solution {
+    public long maxSubarrays(int n, int[][] conflictingPairs) {
+        long maxValid = 0;
+
+        for (int skip = 0; skip < conflictingPairs.length; skip++) {
+            // Build conflict map after skipping one conflicting pair
+            Map<Integer, Set<Integer>> conflictMap = new HashMap<>();
+            for (int i = 0; i < conflictingPairs.length; i++) {
+                if (i == skip) continue;
+                int a = conflictingPairs[i][0];
+                int b = conflictingPairs[i][1];
+                conflictMap.computeIfAbsent(a, k -> new HashSet<>()).add(b);
+                conflictMap.computeIfAbsent(b, k -> new HashSet<>()).add(a);
+            }
+
+            // Sliding window
+            Map<Integer, Integer> freq = new HashMap<>();
+            int left = 1;
+            long valid = 0;
+
+            for (int right = 1; right <= n; right++) {
+                freq.put(right, freq.getOrDefault(right, 0) + 1);
+
+                // Shrink window if conflict exists
+                while (hasConflict(freq, conflictMap, right)) {
+                    int leftVal = left;
+                    freq.put(leftVal, freq.get(leftVal) - 1);
+                    if (freq.get(leftVal) == 0) {
+                        freq.remove(leftVal);
+                    }
+                    left++;
+                }
+
+                // Number of valid subarrays ending at right
+                valid += (right - left + 1);
+            }
+
+            maxValid = Math.max(maxValid, valid);
+        }
+
+        return maxValid;
+    }
+
+    // Helper to check if current number conflicts with anyone in the window
+    private boolean hasConflict(Map<Integer, Integer> freq, Map<Integer, Set<Integer>> conflictMap, int curr) {
+        if (!conflictMap.containsKey(curr)) return false;
+        for (int conflict : conflictMap.get(curr)) {
+            if (freq.containsKey(conflict)) return true;
+        }
+        return false;
+    }
+}
+
+
 
 #### C++
 
